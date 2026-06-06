@@ -1,0 +1,22 @@
+name: subcontractorhub
+label: "SubcontractorHub — Lead Capture / Homepage"
+# TODO: set the exact URL once access is granted (homepage or the specific
+# lead-magnet landing page you want audited first).
+url: ""
+
+suites:
+  - cro
+  - lead_capture
+
+# SubcontractorHub is a construction SaaS site and may be client-rendered.
+# If the HTTP probe comes back thin, capture rendered HTML to captures/ and
+# point this at it.
+rendered_html_path: null
+
+auth: {}
+
+notes: >
+  Construction subcontractor SaaS. Replicating the lead-magnet bot playbook:
+  focus on the lead-capture funnel and bot/UX quality. Provide the live URL,
+  and (for the interactive/agent tests) chat access + an inbox to verify the
+  follow-up sequence.

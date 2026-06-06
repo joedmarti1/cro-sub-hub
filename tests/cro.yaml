@@ -1,0 +1,135 @@
+suite: cro
+description: >
+  Conversion-rate optimization checks for a marketing/landing page. Mix of
+  automated signal detection and agent-judged messaging quality.
+
+tests:
+  - id: cro.value_prop_above_fold
+    name: Value proposition above the fold
+    category: messaging
+    weight: 14
+    method: auto
+    check: value_prop_above_fold
+    rationale: >
+      Visitors decide whether to stay within seconds. A benefit-led headline
+      that is visible without scrolling is the single biggest on-page lever.
+    pass_criteria: A concise, benefit-oriented H1 visible without scrolling.
+
+  - id: cro.headline_message_match
+    name: Headline / ad message match (agent)
+    category: messaging
+    weight: 6
+    method: agent
+    agent_prompt: >
+      Compare the page headline and subhead to the traffic source's promise
+      (ad copy, email, or search intent). Score 0-100 for message match and
+      note any mismatch that would cause bounce.
+    pass_criteria: Headline restates the promise that brought the visitor.
+
+  - id: cro.primary_cta_present
+    name: Primary CTA present & action-oriented
+    category: action
+    weight: 12
+    method: auto
+    check: primary_cta_present
+    rationale: >
+      Every conversion page needs an obvious, verb-led primary action.
+    pass_criteria: At least one prominent action-oriented CTA detected.
+
+  - id: cro.cta_focus
+    name: Single conversion focus
+    category: action
+    weight: 8
+    method: auto
+    check: cta_focus
+    rationale: >
+      Competing CTAs split attention. The best pages drive one primary action.
+    pass_criteria: One or two distinct conversion actions, not a scattered set.
+
+  - id: cro.social_proof
+    name: Social proof present
+    category: trust
+    weight: 12
+    method: auto
+    check: social_proof
+    rationale: >
+      Testimonials, reviews, logos and counts reduce perceived risk and lift
+      conversion, especially for unknown brands.
+    pass_criteria: Testimonials / reviews / 'trusted by' signals present.
+
+  - id: cro.trust_signals
+    name: Risk-reduction & trust signals
+    category: trust
+    weight: 8
+    method: auto
+    check: trust_signals
+    rationale: >
+      Guarantees, 'no credit card', security and compliance cues lower the
+      perceived cost of saying yes.
+    pass_criteria: Guarantee / security / risk-reversal language present.
+
+  - id: cro.form_friction
+    name: Form friction (field count)
+    category: action
+    weight: 10
+    method: auto
+    check: form_friction
+    rationale: >
+      Each extra field measurably reduces completion. First-touch forms should
+      ask for the minimum needed to follow up.
+    pass_criteria: Primary form asks for ~3 fields or fewer.
+
+  - id: cro.readability
+    name: Copy readability
+    category: messaging
+    weight: 6
+    method: auto
+    check: readability
+    rationale: >
+      Dense, jargon-heavy copy slows comprehension and hurts conversion.
+    pass_criteria: Flesch Reading Ease >= 60 (plain language).
+
+  - id: cro.mobile_viewport
+    name: Mobile responsive viewport
+    category: technical
+    weight: 8
+    method: auto
+    check: mobile_viewport
+    rationale: >
+      Most paid and social traffic is mobile; a non-responsive page tanks
+      conversion regardless of copy.
+    pass_criteria: Responsive viewport meta (width=device-width).
+
+  - id: cro.page_speed
+    name: Server response speed
+    category: technical
+    weight: 8
+    method: auto
+    check: page_speed
+    rationale: >
+      Slow first paint correlates strongly with bounce. This is a coarse HTML
+      timing proxy; run full Core Web Vitals for LCP/INP/CLS.
+    pass_criteria: HTML response under ~800 ms; CWV pass in follow-up.
+
+  - id: cro.urgency_scarcity
+    name: Urgency / scarcity (ethical)
+    category: persuasion
+    weight: 4
+    method: auto
+    check: urgency_scarcity
+    rationale: >
+      Honest urgency (real deadlines, limited slots) can lift action. Avoid
+      fake countdowns.
+    pass_criteria: Genuine urgency cues present where appropriate.
+
+  - id: cro.visual_hierarchy
+    name: Visual hierarchy & above-the-fold layout (agent)
+    category: design
+    weight: 4
+    method: interactive
+    agent_prompt: >
+      Screenshot the page at desktop (1440px) and mobile (390px). Assess
+      whether the eye is drawn to the value prop then the primary CTA, whether
+      the hero is cluttered, and whether the CTA is visible without scrolling
+      on mobile. Score 0-100 and list specific layout issues.
+    pass_criteria: Clear hierarchy; primary CTA visible above the fold on mobile.

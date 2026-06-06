@@ -1,0 +1,120 @@
+suite: lead_capture
+description: >
+  Lead-magnet and bot/UX checks — does the page capture, qualify, and follow
+  up effectively? Carries the playbook learned from the lead-magnet bots.
+
+tests:
+  - id: lead.offer_clarity
+    name: Lead-magnet offer is clear & compelling
+    category: offer
+    weight: 14
+    method: auto
+    check: lead_magnet_offer
+    rationale: >
+      A specific, valuable offer (free quote, guide, audit, estimate) is what
+      earns the contact details. Vague 'contact us' converts poorly.
+    pass_criteria: A concrete free offer is present and tied to a CTA.
+
+  - id: lead.capture_present
+    name: Capture mechanism present
+    category: capture
+    weight: 10
+    method: auto
+    check: capture_form_present
+    rationale: >
+      There must be an actual way to capture the lead on-page (form, email
+      field, or chat capture).
+    pass_criteria: A working capture form or email input exists.
+
+  - id: lead.field_minimization
+    name: Field minimization
+    category: capture
+    weight: 10
+    method: auto
+    check: form_field_minimization
+    rationale: >
+      First-touch capture should ask for the least possible — typically name +
+      email, or just a phone for quote requests.
+    pass_criteria: Main capture asks for ~2 fields or fewer.
+
+  - id: lead.email_validation
+    name: Email field typed & validated
+    category: capture
+    weight: 6
+    method: auto
+    check: email_validation
+    rationale: >
+      A typed, required email input gives basic client-side validation and
+      better mobile keyboards, reducing bad leads.
+    pass_criteria: input type=email, marked required.
+
+  - id: lead.consent_compliance
+    name: Consent & privacy disclosure at capture
+    category: compliance
+    weight: 8
+    method: auto
+    check: consent_compliance
+    rationale: >
+      A privacy link and (where required) a consent checkbox near the form
+      keep capture compliant and build trust.
+    pass_criteria: Privacy link present; explicit consent where required.
+
+  - id: lead.chatbot_present
+    name: Qualifying chat/bot widget
+    category: bot
+    weight: 10
+    method: auto
+    check: chatbot_present
+    rationale: >
+      A bot that greets, qualifies (budget/timeline/scope), and routes leads
+      lifts capture vs. a static form alone.
+    pass_criteria: A chat/bot widget is present and qualifies leads.
+
+  - id: lead.bot_conversation_quality
+    name: Bot conversation quality (interactive)
+    category: bot
+    weight: 12
+    method: interactive
+    agent_prompt: >
+      Open the live chat/bot and run a realistic subcontractor inquiry. Assess:
+      (1) speed of first response, (2) whether it asks qualifying questions
+      (trade, project size, timeline, location), (3) whether it captures
+      contact details, (4) whether it sets next-step expectations, (5) graceful
+      fallback to a human. Score 0-100 and transcribe key turns.
+    pass_criteria: Fast greeting, ≥2 qualifying questions, captures contact,
+      sets a clear next step.
+
+  - id: lead.exit_intent
+    name: Exit-intent / abandonment recovery
+    category: recovery
+    weight: 5
+    method: auto
+    check: exit_intent
+    rationale: >
+      An exit-intent offer or popup recovers a share of visitors who would
+      otherwise leave without converting.
+    pass_criteria: Exit-intent or abandonment capture is present.
+
+  - id: lead.confirmation_flow
+    name: Post-submit confirmation & next step (interactive)
+    category: followup
+    weight: 8
+    method: interactive
+    agent_prompt: >
+      Submit the capture form with test data and observe: does a clear
+      thank-you / confirmation appear? Is the next step stated (we'll call in
+      X, check your email)? Is there an immediate email/SMS? Score 0-100 and
+      capture the confirmation screen.
+    pass_criteria: Clear confirmation + stated next step + immediate auto-reply.
+
+  - id: lead.followup_sequence
+    name: Follow-up sequence triggers (agent)
+    category: followup
+    weight: 7
+    method: agent
+    agent_prompt: >
+      Using inbox access, verify whether submitting the form triggers an
+      immediate auto-reply and a follow-up sequence. Note timing, sender
+      reputation, and whether messaging matches the offer. Cross-check with the
+      email deliverability skill if needed.
+    pass_criteria: Immediate auto-reply + at least one timely follow-up.

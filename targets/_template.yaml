@@ -1,0 +1,21 @@
+# Copy this file to <yourtarget>.yaml and fill it in.
+name: example
+label: "Example Co — Homepage"
+url: "https://example.com/"
+
+# Which test suites to run (file stems in tests/). Empty = all.
+suites:
+  - cro
+  - lead_capture
+
+# Optional: path to pre-captured rendered HTML for JS-heavy/SPA pages.
+# Capture it via the Chrome MCP or Playwright, save to captures/, point here.
+rendered_html_path: null
+
+# Optional: credentialed access for gated pages (kept out of git via
+# <name>.secret.yaml — never commit real creds).
+auth: {}
+
+notes: >
+  Free-text context about this target — traffic sources, the specific funnel
+  step under test, known issues, etc.

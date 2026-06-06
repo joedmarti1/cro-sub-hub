@@ -1,0 +1,18 @@
+# Reports & artifacts
+reports/*.json
+reports/*.md
+reports/*.html
+!reports/.gitkeep
+
+# Captured pages
+captures/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Secrets / credentialed access
+targets/*.secret.yaml
+.env
