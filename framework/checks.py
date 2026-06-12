@@ -7,6 +7,7 @@ rather than a false FAIL.
 """
 
 import re
+from urllib.parse import urlparse, parse_qs
 
 from .models import CheckResult, PASS, WARN, FAIL, NA
 from . import probe as probe_mod
@@ -288,3 +289,112 @@ def email_validation(probe):
         return _result(60, WARN, notes="Email input present but not marked required.")
     # A generic text input might still collect email; can't confirm.
     return _result(0, NA, notes="No type=email input found to validate.")
+
+
+# --------------------------------------------------------------------------
+# UTM coverage check
+# --------------------------------------------------------------------------
+
+# URL path fragments that strongly suggest a form-fill destination.
+_FORM_PATHS = [
+    "/signup", "/sign-up", "/sign_up", "/register", "/contact", "/contact-us",
+    "/demo", "/request-demo", "/book-demo", "/get-demo", "/schedule-demo",
+    "/quote", "/get-quote", "/request-quote", "/free-quote",
+    "/schedule", "/book", "/booking", "/trial", "/free-trial",
+    "/start", "/get-started", "/join", "/apply", "/enroll", "/onboarding",
+    "/lead", "/form", "/inquiry",
+]
+
+_UTM_REQUIRED = ["utm_source", "utm_medium", "utm_campaign"]
+
+# Analytics presence acts as fallback proof of event-level tracking.
+_ANALYTICS_NEEDLES = ["gtag(", "googletagmanager.com", "G-", "GTM-",
+                      "segment.io", "analytics.js", "rudderstack", "heap.io",
+                      "mixpanel", "plausible"]
+
+
+def _is_form_link(href, link_text, base_host):
+    """Return True if this href looks like it leads to a form fill."""
+    if not href or href.startswith(("#", "mailto:", "tel:", "javascript:")):
+        return False
+    parsed = urlparse(href)
+    path = parsed.path.lower()
+    host = parsed.netloc.lower()
+    text = link_text.lower()
+
+    if any(fp in path for fp in _FORM_PATHS):
+        return True
+    # Cross-domain link from a CTA (e.g. main site → app subdomain signup)
+    if host and host != base_host and any(w in text for w in CTA_WORDS):
+        return True
+    # Anchor text alone is a strong signal even without path pattern
+    if any(w in text for w in CTA_WORDS):
+        return True
+    return False
+
+
+def _utm_status(href):
+    """Return (has_all, missing_list) for the three required UTM params."""
+    params = parse_qs(urlparse(href).query)
+    missing = [p for p in _UTM_REQUIRED if p not in params]
+    return len(missing) == 0, missing
+
+
+def utm_coverage(probe):
+    """Check that CTA/form-pointing links carry utm_source, utm_medium, utm_campaign."""
+    base_host = urlparse(probe.url).netloc if probe.url else ""
+    candidates = []
+
+    for a in probe.soup.find_all("a", href=True):
+        href = a.get("href", "").strip()
+        text = a.get_text(" ", strip=True)
+        if _is_form_link(href, text, base_host):
+            ok, missing = _utm_status(href)
+            candidates.append({"href": href, "text": text[:70], "ok": ok, "missing": missing})
+
+    # Deduplicate by href so repeated nav links don't inflate the pass count.
+    seen = {}
+    for c in candidates:
+        seen.setdefault(c["href"], c)
+    unique = list(seen.values())
+
+    if not unique:
+        # Fall back to analytics presence as a proxy.
+        has_analytics = any(n in probe.html for n in _ANALYTICS_NEEDLES)
+        if has_analytics:
+            return _result(55, WARN,
+                           evidence=["Analytics/GTM detected (event-level tracking possible)"],
+                           notes="No form-pointing links found in static HTML — likely JS-rendered. "
+                                 "Capture rendered HTML or verify UTM params in your tag manager.")
+        return _result(0, NA,
+                       notes="No form-pointing links detected. Page may be client-rendered; "
+                             "capture rendered HTML and re-run.")
+
+    ok_links = [c for c in unique if c["ok"]]
+    bad_links = [c for c in unique if not c["ok"]]
+    pct = len(ok_links) / len(unique)
+
+    evidence = []
+    for c in unique:
+        if c["ok"]:
+            evidence.append(f"✅  {c['text']}  →  {c['href']}")
+        else:
+            evidence.append(
+                f"❌  {c['text']}  →  {c['href']}"
+                f"  [missing: {', '.join(c['missing'])}]"
+            )
+
+    if pct >= 1.0:
+        return _result(92, PASS, evidence=evidence,
+                       notes=f"All {len(unique)} form-pointing link(s) carry full UTM params.")
+    if pct >= 0.75:
+        return _result(68, WARN, evidence=evidence,
+                       notes=f"{len(ok_links)}/{len(unique)} links UTM-tagged. "
+                             f"Add missing params to {len(bad_links)} link(s).")
+    if pct >= 0.25:
+        return _result(40, FAIL, evidence=evidence,
+                       notes=f"Only {len(ok_links)}/{len(unique)} links UTM-tagged. "
+                             "Attribution will be incomplete.")
+    return _result(15, FAIL, evidence=evidence,
+                   notes=f"UTM tracking missing on {len(bad_links)}/{len(unique)} "
+                         "form-pointing link(s). Conversion source will be unattributable.")

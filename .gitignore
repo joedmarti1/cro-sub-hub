@@ -1,3 +1,8 @@
+# Next.js
+.next/
+node_modules/
+package-lock.json
+
 # Reports & artifacts
 reports/*.json
 reports/*.md
@@ -16,3 +21,4 @@ venv/
 # Secrets / credentialed access
 targets/*.secret.yaml
 .env
+.vercel

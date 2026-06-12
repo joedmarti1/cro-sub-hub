@@ -133,3 +133,18 @@ tests:
       the hero is cluttered, and whether the CTA is visible without scrolling
       on mobile. Score 0-100 and list specific layout issues.
     pass_criteria: Clear hierarchy; primary CTA visible above the fold on mobile.
+
+  - id: cro.utm_coverage
+    name: UTM tracking on form-pointing CTAs
+    category: tracking
+    weight: 10
+    method: auto
+    check: utm_coverage
+    rationale: >
+      Every button and link that drives a visitor to a form fill must carry
+      utm_source, utm_medium, and utm_campaign so you know which channel,
+      campaign, and creative is generating leads. Without UTMs, conversion
+      data lands in "(direct)" and A/B tests are unattributable.
+    pass_criteria: >
+      All CTA / form-pointing links include utm_source, utm_medium, and
+      utm_campaign. utm_content is recommended for popup/button-level A/B tests.

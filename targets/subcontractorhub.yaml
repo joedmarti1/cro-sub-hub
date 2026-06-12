@@ -2,7 +2,7 @@ name: subcontractorhub
 label: "SubcontractorHub — Lead Capture / Homepage"
 # TODO: set the exact URL once access is granted (homepage or the specific
 # lead-magnet landing page you want audited first).
-url: ""
+url: "https://www.subcontractorhub.com"
 
 suites:
   - cro
