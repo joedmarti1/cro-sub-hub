@@ -110,27 +110,27 @@
   function replaceBlogContactForm() {
     if (!/\/blog\b/i.test(window.location.pathname)) return;
 
-    // Try common selectors first, then fall back to heading-text scan
-    var target = document.querySelector('#getintouch, #get-in-touch, [id*="contact-form"], [id*="contact_form"]');
-    if (!target) {
-      var headings = document.querySelectorAll('h2, h3');
-      for (var i = 0; i < headings.length; i++) {
-        if (/get in touch/i.test(headings[i].textContent)) {
-          // Walk up to the section/div that wraps the whole form block
-          var el = headings[i];
-          while (el.parentElement && el.parentElement.tagName !== 'MAIN' && el.parentElement.tagName !== 'ARTICLE' && el.parentElement.tagName !== 'BODY') {
-            if (el.parentElement.querySelector('form, input[type="email"]')) {
-              el = el.parentElement;
-              break;
-            }
-            el = el.parentElement;
-          }
-          target = el;
-          break;
-        }
+    // Target the blog detail form by its known class
+    var form = document.querySelector('form.formBlogDetail');
+    if (!form) return;
+
+    // The form sits in a col-lg-4 sidebar next to the col-lg-8 article.
+    // Widen the article to full width, remove the form column, then
+    // insert the banner below the row.
+    var formCol = form.closest('[class*="col-"]');
+    var row = formCol ? formCol.closest('.row') : null;
+
+    if (row) {
+      // Expand the article column to full width
+      var articleCol = row.querySelector('.col-lg-8, .col-md-8, .col-8');
+      if (articleCol) {
+        articleCol.className = articleCol.className
+          .replace(/col-lg-\d+/g, 'col-lg-12')
+          .replace(/col-md-\d+/g, 'col-md-12');
       }
+      // Drop the form column entirely
+      formCol.remove();
     }
-    if (!target) return;
 
     var banner = document.createElement('div');
     banner.id = 'sch-blog-banner';
@@ -202,7 +202,12 @@
       '</div>',
     ].join('');
 
-    target.parentNode.replaceChild(banner, target);
+    // Insert banner after the row, or fall back to replacing the form
+    if (row && row.parentNode) {
+      row.parentNode.insertBefore(banner, row.nextSibling);
+    } else {
+      form.parentNode.replaceChild(banner, form);
+    }
   }
 
   // ── Init ───────────────────────────────────────────────────────────────────
