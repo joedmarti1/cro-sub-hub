@@ -6,6 +6,13 @@
 (function () {
   'use strict';
 
+  // Pre-hide the blog form immediately (sync) so it never flashes before the banner loads
+  if (/\/blog\b/i.test(window.location.pathname)) {
+    var _ph = document.createElement('style');
+    _ph.textContent = 'form.formBlogDetail{visibility:hidden!important}';
+    (document.head || document.documentElement).appendChild(_ph);
+  }
+
   var DEMO_URL = 'https://app.subcontractorhub.com/sch-book-a-demo';
   var UTM_BASE = '?utm_source=site&utm_medium=popup&utm_campaign=lead-capture';
 
@@ -106,107 +113,88 @@
     });
   }
 
-  // ── Blog contact-form → CTA banner ────────────────────────────────────────
+  // ── Blog contact-form → right-rail + mid-article CTA banners ────────────
   function replaceBlogContactForm() {
     if (!/\/blog\b/i.test(window.location.pathname)) return;
 
-    // Target the blog detail form by its known class
     var form = document.querySelector('form.formBlogDetail');
     if (!form) return;
 
-    // The form sits in a col-lg-4 sidebar next to the col-lg-8 article.
-    // Widen the article to full width, remove the form column, then
-    // insert the banner below the row.
     var formCol = form.closest('[class*="col-"]');
     var row = formCol ? formCol.closest('.row') : null;
 
-    if (row) {
-      // Expand the article column to full width
-      var articleCol = row.querySelector('.col-lg-8, .col-md-8, .col-8');
-      if (articleCol) {
-        articleCol.className = articleCol.className
-          .replace(/col-lg-\d+/g, 'col-lg-12')
-          .replace(/col-md-\d+/g, 'col-md-12');
-      }
-      // Drop the form column entirely
-      formCol.remove();
-    }
+    var starSVG = '<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>';
+    var checkSVG = '<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>';
 
-    var banner = document.createElement('div');
-    banner.id = 'sch-blog-banner';
-
-    var css = [
-      '#sch-blog-banner{',
-        'background:linear-gradient(135deg,#1a1f6e 0%,#2d3282 50%,#1e2875 100%);',
-        'border-radius:14px;',
-        'padding:32px 36px;',
-        'margin:40px 0;',
-        'display:flex;',
-        'align-items:center;',
-        'justify-content:space-between;',
-        'gap:24px;',
-        'box-shadow:0 8px 40px rgba(26,31,110,.35);',
-        'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;',
-        'box-sizing:border-box;',
-      '}',
-      '@media(max-width:640px){#sch-blog-banner{flex-direction:column;text-align:center;padding:28px 24px;}}',
-      '#sch-blog-banner .schb-left{flex:1;min-width:0;}',
-      '#sch-blog-banner .schb-stars{',
-        'display:inline-flex;align-items:center;gap:6px;',
-        'font-size:.75rem;font-weight:700;color:#fbbf24;',
-        'margin-bottom:10px;letter-spacing:.03em;',
-        'background:rgba(251,191,36,.12);padding:3px 10px;border-radius:20px;',
-      '}',
-      '#sch-blog-banner .schb-stars svg{width:12px;height:12px;fill:#fbbf24;}',
-      '#sch-blog-banner .schb-headline{',
-        'color:#fff;font-size:1.35rem;font-weight:800;line-height:1.25;',
-        'margin:0 0 8px;',
-      '}',
-      '#sch-blog-banner .schb-sub{',
-        'color:rgba(255,255,255,.72);font-size:.9rem;line-height:1.5;margin:0;',
-      '}',
-      '#sch-blog-banner .schb-right{flex-shrink:0;}',
-      '#sch-blog-banner .schb-btn{',
-        'display:inline-block;',
-        'background:#f59e0b;',
-        'color:#1a1f6e !important;',
-        'font-weight:800;font-size:.95rem;',
-        'padding:14px 28px;border-radius:9px;',
-        'text-decoration:none;white-space:nowrap;',
-        'box-shadow:0 4px 16px rgba(245,158,11,.45);',
-        'transition:background .15s,transform .1s;',
-        'letter-spacing:.01em;',
-      '}',
-      '#sch-blog-banner .schb-btn:hover{background:#d97706;transform:translateY(-1px);}',
-      '#sch-blog-banner .schb-note{',
-        'display:block;margin-top:8px;',
-        'font-size:.75rem;color:rgba(255,255,255,.45);text-align:center;',
-      '}',
+    // ── 1. Right-rail sticky banner (replaces form column) ───────────────────
+    var railCSS = [
+      '#sch-rail-banner{background:linear-gradient(160deg,#1a1f6e 0%,#2d3282 55%,#1e2875 100%);border-radius:14px;padding:28px 22px 24px;position:sticky;top:96px;text-align:center;box-shadow:0 8px 40px rgba(26,31,110,.35);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;box-sizing:border-box;}',
+      '#sch-rail-banner .schr-stars{display:inline-flex;align-items:center;justify-content:center;gap:4px;font-size:.72rem;font-weight:700;color:#fbbf24;margin-bottom:14px;letter-spacing:.03em;background:rgba(251,191,36,.12);padding:4px 10px;border-radius:20px;}',
+      '#sch-rail-banner .schr-stars svg{width:11px;height:11px;fill:#fbbf24;}',
+      '#sch-rail-banner .schr-headline{color:#fff;font-size:1.1rem;font-weight:800;line-height:1.25;margin:0 0 10px;}',
+      '#sch-rail-banner .schr-sub{color:rgba(255,255,255,.72);font-size:.82rem;line-height:1.5;margin:0 0 16px;}',
+      '#sch-rail-banner .schr-divider{border:none;border-top:1px solid rgba(255,255,255,.12);margin:0 0 14px;}',
+      '#sch-rail-banner .schr-feature{display:flex;align-items:center;gap:8px;font-size:.78rem;color:rgba(255,255,255,.78);margin-bottom:8px;text-align:left;}',
+      '#sch-rail-banner .schr-feature svg{flex-shrink:0;width:13px;height:13px;fill:#34d399;}',
+      '#sch-rail-banner .schr-btn{display:block;background:#f59e0b;color:#1a1f6e !important;font-weight:800;font-size:.9rem;padding:13px 20px;border-radius:9px;text-decoration:none;box-shadow:0 4px 16px rgba(245,158,11,.45);transition:background .15s,transform .1s;margin-top:20px;margin-bottom:8px;}',
+      '#sch-rail-banner .schr-btn:hover{background:#d97706;transform:translateY(-1px);}',
+      '#sch-rail-banner .schr-note{font-size:.7rem;color:rgba(255,255,255,.4);}',
     ].join('');
 
-    var starSVG = '<svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>';
-    var stars = starSVG.repeat(5);
+    var railBanner = document.createElement('div');
+    railBanner.id = 'sch-rail-banner';
+    railBanner.innerHTML = [
+      '<style>' + railCSS + '</style>',
+      '<div class="schr-stars">' + starSVG.repeat(5) + '&nbsp;4.9 on G2</div>',
+      '<h3 class="schr-headline">See SubcontractorHub in 30 minutes.</h3>',
+      '<p class="schr-sub">The all-in-one platform for roofing, solar &amp; HVAC.</p>',
+      '<div class="schr-divider"></div>',
+      '<div class="schr-feature">' + checkSVG + '<span>AI quoting &amp; proposals</span></div>',
+      '<div class="schr-feature">' + checkSVG + '<span>Project management</span></div>',
+      '<div class="schr-feature">' + checkSVG + '<span>Faster payments</span></div>',
+      '<a href="' + demoLink('blog-rail-banner') + '" class="schr-btn" target="_blank" rel="noopener">Book a Free Demo &rarr;</a>',
+      '<span class="schr-note">No commitment &middot; 30 minutes</span>',
+    ].join('');
 
-    banner.innerHTML = [
-      '<style>' + css + '</style>',
+    if (formCol) {
+      formCol.innerHTML = '';
+      formCol.appendChild(railBanner);
+    } else {
+      form.parentNode.replaceChild(railBanner, form);
+    }
+
+    // ── 2. Mid-article inline banner (inserted after the row) ────────────────
+    var midCSS = [
+      '#sch-blog-banner{background:linear-gradient(135deg,#1a1f6e 0%,#2d3282 50%,#1e2875 100%);border-radius:14px;padding:32px 36px;margin:40px 0;display:flex;align-items:center;justify-content:space-between;gap:24px;box-shadow:0 8px 40px rgba(26,31,110,.35);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;box-sizing:border-box;}',
+      '@media(max-width:640px){#sch-blog-banner{flex-direction:column;text-align:center;padding:28px 24px;}}',
+      '#sch-blog-banner .schb-left{flex:1;min-width:0;}',
+      '#sch-blog-banner .schb-stars{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:700;color:#fbbf24;margin-bottom:10px;letter-spacing:.03em;background:rgba(251,191,36,.12);padding:3px 10px;border-radius:20px;}',
+      '#sch-blog-banner .schb-stars svg{width:12px;height:12px;fill:#fbbf24;}',
+      '#sch-blog-banner .schb-headline{color:#fff;font-size:1.35rem;font-weight:800;line-height:1.25;margin:0 0 8px;}',
+      '#sch-blog-banner .schb-sub{color:rgba(255,255,255,.72);font-size:.9rem;line-height:1.5;margin:0;}',
+      '#sch-blog-banner .schb-right{flex-shrink:0;}',
+      '#sch-blog-banner .schb-btn{display:inline-block;background:#f59e0b;color:#1a1f6e !important;font-weight:800;font-size:.95rem;padding:14px 28px;border-radius:9px;text-decoration:none;white-space:nowrap;box-shadow:0 4px 16px rgba(245,158,11,.45);transition:background .15s,transform .1s;letter-spacing:.01em;}',
+      '#sch-blog-banner .schb-btn:hover{background:#d97706;transform:translateY(-1px);}',
+      '#sch-blog-banner .schb-note{display:block;margin-top:8px;font-size:.75rem;color:rgba(255,255,255,.45);text-align:center;}',
+    ].join('');
+
+    var midBanner = document.createElement('div');
+    midBanner.id = 'sch-blog-banner';
+    midBanner.innerHTML = [
+      '<style>' + midCSS + '</style>',
       '<div class="schb-left">',
-        '<span class="schb-stars">' + stars + '&nbsp;4.9 on G2</span>',
+        '<span class="schb-stars">' + starSVG.repeat(5) + '&nbsp;4.9 on G2</span>',
         '<h3 class="schb-headline">See SubcontractorHub in 30 minutes.</h3>',
-        '<p class="schb-sub">AI quoting, project management & faster payments — all in one platform built for roofing, solar, and HVAC.</p>',
+        '<p class="schb-sub">AI quoting, project management &amp; faster payments — all in one platform built for roofing, solar, and HVAC.</p>',
       '</div>',
       '<div class="schb-right">',
-        '<a href="' + demoLink('blog-inline-banner') + '" class="schb-btn" target="_blank" rel="noopener">',
-          'Book a Free Demo &rarr;',
-        '</a>',
+        '<a href="' + demoLink('blog-inline-banner') + '" class="schb-btn" target="_blank" rel="noopener">Book a Free Demo &rarr;</a>',
         '<span class="schb-note">No commitment &middot; 30 minutes</span>',
       '</div>',
     ].join('');
 
-    // Insert banner after the row, or fall back to replacing the form
     if (row && row.parentNode) {
-      row.parentNode.insertBefore(banner, row.nextSibling);
-    } else {
-      form.parentNode.replaceChild(banner, form);
+      row.parentNode.insertBefore(midBanner, row.nextSibling);
     }
   }
 
