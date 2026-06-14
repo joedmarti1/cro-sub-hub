@@ -2,6 +2,9 @@
  * SubcontractorHub — CRO Banner Suite
  * Drop this script in GTM or paste into <head> on subcontractorhub.com
  * Hosted: https://cro-sub-hub.vercel.app/banner.js
+ *
+ * Popups: welcome modal (4s) · scroll-depth (40%) · exit-intent · sticky footer
+ * All CTAs route to https://app.subcontractorhub.com/sch-book-a-demo with UTM
  */
 (function () {
   'use strict';
@@ -16,9 +19,31 @@
   var DEMO_URL = 'https://app.subcontractorhub.com/sch-book-a-demo';
   var UTM_BASE = '?utm_source=site&utm_medium=popup&utm_campaign=lead-capture';
 
+  // Pages where we should NOT show popups (support/legal/auth flows confuse the funnel)
+  var EXCLUDED_PATHS = ['/support', '/privacy', '/terms', '/plan', '/login', '/help', '/careers'];
+
+  function isExcludedPage() {
+    var path = window.location.pathname;
+    return EXCLUDED_PATHS.some(function (p) { return path.startsWith(p); });
+  }
+
   // ── Helpers ────────────────────────────────────────────────────────────────
   function demoLink(content) {
     return DEMO_URL + UTM_BASE + '&utm_content=' + content;
+  }
+
+  // 24-hour first-party cookie guard.
+  // Replaces sessionStorage so repeat visitors don't see the popup on every new
+  // tab/window within the same day (sessionStorage resets per browsing context).
+  function setCookie(name, hours) {
+    var d = new Date();
+    d.setTime(d.getTime() + hours * 3600000);
+    document.cookie = name + '=1;expires=' + d.toUTCString() + ';path=/;SameSite=Lax';
+  }
+
+  function getCookie(name) {
+    var match = document.cookie.match('(?:^|; )' + name + '=([^;]*)');
+    return match ? match[1] : null;
   }
 
   function injectStyles() {
@@ -36,6 +61,18 @@
       '.sch-micro{font-size:.8rem;color:#bbb;margin:0 0 16px}',
       '.sch-no-thanks{background:none;border:none;color:#ccc;font-size:.82rem;cursor:pointer;text-decoration:underline;padding:0}',
       '.sch-close{position:absolute;top:14px;right:18px;background:none;border:none;font-size:1.5rem;cursor:pointer;color:#bbb;line-height:1;padding:2px 6px}',
+      // Exit-intent styles
+      '#sch-exit-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:2147483646;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);animation:schFadeIn .2s ease}',
+      '#sch-exit-modal{background:#fff;color:#111;border-radius:18px;padding:40px 36px 32px;max-width:460px;width:100%;position:relative;box-shadow:0 28px 80px rgba(0,0,0,.45);animation:schSlideUp .25s ease;text-align:center;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}',
+      '#sch-exit-modal h2{font-size:1.4rem;font-weight:800;line-height:1.25;margin:0 0 10px;color:#111}',
+      '#sch-exit-modal p{font-size:.92rem;color:#555;line-height:1.55;margin:0 0 22px}',
+      '.sch-exit-pill{display:inline-block;margin-bottom:18px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:#0891b2;background:rgba(8,145,178,.1);padding:3px 12px;border-radius:4px}',
+      '.sch-role-btns{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}',
+      '.sch-role-btn{display:block;padding:14px 24px;border-radius:10px;font-weight:700;font-size:.98rem;text-decoration:none;transition:background .15s,transform .1s}',
+      '.sch-role-btn-sub{background:#0891b2;color:#fff !important;box-shadow:0 4px 14px rgba(8,145,178,.38)}',
+      '.sch-role-btn-sub:hover{background:#0e7490;transform:translateY(-1px)}',
+      '.sch-role-btn-gc{background:#f3f4f6;color:#374151 !important;border:1px solid #e5e7eb}',
+      '.sch-role-btn-gc:hover{background:#e5e7eb;transform:translateY(-1px)}',
       '#sch-footer{position:fixed;bottom:0;left:0;right:0;z-index:2147483645;background:linear-gradient(90deg,#4f46e5 0%,#6366f1 100%);box-shadow:0 -4px 24px rgba(99,102,241,.35);display:flex;align-items:center;justify-content:center;gap:16px;padding:13px 48px 13px 24px;animation:schSlideFooter .35s cubic-bezier(.22,1,.36,1);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}',
       '#sch-footer .sch-f-headline{color:#fff;font-size:.95rem;font-weight:700;white-space:nowrap}',
       '#sch-footer .sch-f-sub{color:rgba(255,255,255,.75);font-size:.85rem;display:none}',
@@ -65,18 +102,17 @@
 
     document.body.appendChild(bar);
 
-    // add body padding so content isn't hidden behind the bar
     var prev = parseInt(document.body.style.paddingBottom || 0, 10);
     document.body.style.paddingBottom = (prev + 56) + 'px';
 
     bar.querySelector('.sch-f-close').addEventListener('click', function () {
       bar.remove();
-      sessionStorage.setItem('sch_footer_dismissed', '1');
+      setCookie('sch_footer_dismissed', 24);
       document.body.style.paddingBottom = prev + 'px';
     });
   }
 
-  // ── Popup modal ────────────────────────────────────────────────────────────
+  // ── Welcome popup modal (4s delay) ─────────────────────────────────────────
   function showPopup() {
     if (document.getElementById('sch-overlay')) return;
 
@@ -96,7 +132,7 @@
 
     document.body.appendChild(overlay);
     document.body.style.overflow = 'hidden';
-    sessionStorage.setItem('sch_popup_seen', '1');
+    setCookie('sch_popup_seen', 24);
 
     function close() {
       overlay.remove();
@@ -111,6 +147,115 @@
     document.addEventListener('keydown', function esc(e) {
       if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); }
     });
+  }
+
+  // ── Scroll-depth popup (fires at 40% scroll) ───────────────────────────────
+  // Suppressed if welcome modal already fired today (prevents double-popup same session).
+  // Uses a different headline/angle to avoid repetition if a returning user sees it.
+  function initScrollPopup() {
+    var fired = false;
+
+    function onScroll() {
+      if (fired) return;
+      var scrolled = window.scrollY + window.innerHeight;
+      var total = document.documentElement.scrollHeight;
+      if (scrolled / total < 0.40) return;
+
+      fired = true;
+      window.removeEventListener('scroll', onScroll);
+
+      // Suppress if the welcome modal fired in this 24h window
+      if (getCookie('sch_popup_seen') || getCookie('sch_scroll_seen')) return;
+
+      var overlay = document.createElement('div');
+      overlay.id = 'sch-overlay';
+      overlay.innerHTML = [
+        '<div id="sch-modal">',
+        '  <button class="sch-close" aria-label="Close">&#215;</button>',
+        '  <div class="sch-pill">See It In Action</div>',
+        '  <h2>Win More Bids. Run Better Projects.</h2>',
+        '  <p>SubcontractorHub automates quoting, job tracking, and payments — built for roofing, solar, and HVAC crews who want to scale without the chaos.</p>',
+        '  <a href="' + demoLink('scroll-depth-popup') + '" class="sch-cta-btn" target="_blank" rel="noopener">See How It Works &#8594;</a>',
+        '  <p class="sch-micro">Built for roofing, solar, and HVAC.</p>',
+        '  <button class="sch-no-thanks">No thanks</button>',
+        '</div>',
+      ].join('');
+
+      document.body.appendChild(overlay);
+      document.body.style.overflow = 'hidden';
+      setCookie('sch_scroll_seen', 24);
+
+      function close() {
+        overlay.remove();
+        document.body.style.overflow = '';
+      }
+
+      overlay.querySelector('.sch-close').addEventListener('click', close);
+      overlay.querySelector('.sch-no-thanks').addEventListener('click', close);
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) close();
+      });
+      document.addEventListener('keydown', function esc(e) {
+        if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); }
+      });
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+
+  // ── Exit-intent popup ──────────────────────────────────────────────────────
+  // Fires when mouse exits toward browser chrome (pageY < 5px) after 15s on page.
+  // Two-button role qualifier routes to demo URL with role-specific UTM so we can
+  // segment sub vs GC traffic through the funnel without a separate landing page.
+  function initExitIntent() {
+    var pageEnter = Date.now();
+    var fired = false;
+
+    function onMouseOut(e) {
+      if (fired) return;
+      if (e.clientY > 5) return;
+      if (Date.now() - pageEnter < 15000) return;
+      if (getCookie('sch_exit_seen')) return;
+
+      fired = true;
+      document.removeEventListener('mouseout', onMouseOut);
+
+      var overlay = document.createElement('div');
+      overlay.id = 'sch-exit-overlay';
+      overlay.innerHTML = [
+        '<div id="sch-exit-modal">',
+        '  <button class="sch-close" aria-label="Close">&#215;</button>',
+        '  <div class="sch-exit-pill">Before You Go</div>',
+        '  <h2>Quick question before you leave&hellip;</h2>',
+        '  <p>What best describes your business? We\'ll show you exactly what SubcontractorHub can do for you.</p>',
+        '  <div class="sch-role-btns">',
+        '    <a href="' + demoLink('exit-intent-sub') + '" class="sch-role-btn sch-role-btn-sub" target="_blank" rel="noopener">I run a subcontracting crew &#8594;</a>',
+        '    <a href="' + demoLink('exit-intent-gc') + '" class="sch-role-btn sch-role-btn-gc" target="_blank" rel="noopener">I\'m a GC / general contractor &#8594;</a>',
+        '  </div>',
+        '  <button class="sch-no-thanks">Neither &mdash; just browsing</button>',
+        '</div>',
+      ].join('');
+
+      document.body.appendChild(overlay);
+      document.body.style.overflow = 'hidden';
+      setCookie('sch_exit_seen', 24);
+
+      function close() {
+        overlay.remove();
+        document.body.style.overflow = '';
+      }
+
+      overlay.querySelector('.sch-close').addEventListener('click', close);
+      overlay.querySelector('.sch-no-thanks').addEventListener('click', close);
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) close();
+      });
+      document.addEventListener('keydown', function esc(e) {
+        if (e.key === 'Escape') { close(); document.removeEventListener('keydown', esc); }
+      });
+    }
+
+    document.addEventListener('mouseout', onMouseOut);
   }
 
   // ── Blog contact-form → right-rail + mid-article CTA banners ────────────
@@ -205,14 +350,29 @@
     // Blog: replace inline contact form with CTA banner
     replaceBlogContactForm();
 
-    // Footer: 1.5s delay, once per session
-    if (!sessionStorage.getItem('sch_footer_dismissed')) {
+    // No popups on support/legal/auth pages — they interfere with the conversion flow
+    if (isExcludedPage()) return;
+
+    // Footer bar: 1.5s delay, dismissed for 24h after user closes it
+    if (!getCookie('sch_footer_dismissed')) {
       setTimeout(showFooter, 1500);
     }
 
-    // Popup: 4s delay, once per session
-    if (!sessionStorage.getItem('sch_popup_seen')) {
+    // Welcome modal: 4s delay, suppressed for 24h after first view
+    if (!getCookie('sch_popup_seen')) {
       setTimeout(showPopup, 4000);
+    }
+
+    // Scroll-depth popup: fires at 40% scroll — suppressed if welcome modal
+    // already fired today (avoids double-popup in same 24h window)
+    if (!getCookie('sch_scroll_seen')) {
+      initScrollPopup();
+    }
+
+    // Exit-intent: fires on mouse-exit toward browser chrome after 15s on page,
+    // suppressed for 24h after first fire
+    if (!getCookie('sch_exit_seen')) {
+      initExitIntent();
     }
   }
 
