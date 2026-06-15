@@ -95,8 +95,8 @@
     bar.id = 'sch-footer';
     bar.innerHTML = [
       '<span class="sch-f-headline">More Jobs. Less Chaos.</span>',
-      '<span class="sch-f-sub">AI quoting · project management · faster payments — one platform.</span>',
-      '<a href="' + demoLink('sticky-footer-bar') + '" class="sch-f-btn" target="_blank" rel="noopener">Book a Demo</a>',
+      '<span class="sch-f-sub">Trusted by 500+ roofing, solar &amp; HVAC teams &mdash; AI quoting, projects, payments.</span>',
+      '<a href="' + demoLink('sticky-footer-bar') + '" class="sch-f-btn" target="_blank" rel="noopener">Book a Free Demo</a>',
       '<button class="sch-f-close" aria-label="Close">&#215;</button>',
     ].join('');
 
@@ -121,11 +121,11 @@
     overlay.innerHTML = [
       '<div id="sch-modal">',
       '  <button class="sch-close" aria-label="Close">&#215;</button>',
-      '  <div class="sch-pill">SubcontractorHub Platform</div>',
+      '  <div class="sch-pill">Trusted by 500+ Crews</div>',
       '  <h2>More Jobs. Less Chaos.</h2>',
       '  <p>The all-in-one platform for roofing, solar, and HVAC businesses — AI quoting, project management, and faster payments from one login.</p>',
       '  <a href="' + demoLink('primary-modal-popup') + '" class="sch-cta-btn" target="_blank" rel="noopener">Book a Demo &#8594;</a>',
-      '  <p class="sch-micro">Free demo. No commitment.</p>',
+      '  <p class="sch-micro">Free 30-min demo &middot; No commitment &middot; Setup in a day.</p>',
       '  <button class="sch-no-thanks">No thanks</button>',
       '</div>',
     ].join('');
@@ -176,7 +176,7 @@
         '  <h2>Win More Bids. Run Better Projects.</h2>',
         '  <p>SubcontractorHub automates quoting, job tracking, and payments — built for roofing, solar, and HVAC crews who want to scale without the chaos.</p>',
         '  <a href="' + demoLink('scroll-depth-popup') + '" class="sch-cta-btn" target="_blank" rel="noopener">See How It Works &#8594;</a>',
-        '  <p class="sch-micro">Built for roofing, solar, and HVAC.</p>',
+        '  <p class="sch-micro">Trusted by 500+ crews &middot; Setup in a day &middot; No commitment.</p>',
         '  <button class="sch-no-thanks">No thanks</button>',
         '</div>',
       ].join('');
@@ -204,21 +204,22 @@
   }
 
   // ── Exit-intent popup ──────────────────────────────────────────────────────
-  // Fires when mouse exits toward browser chrome (pageY < 5px) after 15s on page.
-  // Two-button role qualifier routes to demo URL with role-specific UTM so we can
-  // segment sub vs GC traffic through the funnel without a separate landing page.
+  // Desktop: fires when mouse exits toward browser chrome (clientY < 5px) after 15s.
+  // Mobile:  fires on rapid scroll-up spike (≥100px reversal) after scrolling 40%+
+  //          down and spending 15s on page — mimics the "heading back to address bar"
+  //          intent signal that mouseout catches on desktop.
   function initExitIntent() {
     var pageEnter = Date.now();
     var fired = false;
 
-    function onMouseOut(e) {
+    function showExitModal() {
       if (fired) return;
-      if (e.clientY > 5) return;
-      if (Date.now() - pageEnter < 15000) return;
       if (getCookie('sch_exit_seen')) return;
-
       fired = true;
+
+      // Clean up listeners
       document.removeEventListener('mouseout', onMouseOut);
+      window.removeEventListener('scroll', onMobileExit);
 
       var overlay = document.createElement('div');
       overlay.id = 'sch-exit-overlay';
@@ -255,7 +256,28 @@
       });
     }
 
+    // Desktop: mouse exits toward browser chrome
+    function onMouseOut(e) {
+      if (e.clientY > 5) return;
+      if (Date.now() - pageEnter < 15000) return;
+      showExitModal();
+    }
+
+    // Mobile: rapid upward scroll after being 40%+ down the page for 15s+
+    var maxScrollY = 0;
+    function onMobileExit() {
+      if (fired) return;
+      var sy = window.scrollY;
+      if (sy > maxScrollY) { maxScrollY = sy; return; }
+      var docH = document.documentElement.scrollHeight;
+      if (maxScrollY < docH * 0.40) return;            // must have scrolled 40%+ down
+      if (sy > maxScrollY - 100) return;               // must be a 100px+ reversal
+      if (Date.now() - pageEnter < 15000) return;      // must have spent 15s on page
+      showExitModal();
+    }
+
     document.addEventListener('mouseout', onMouseOut);
+    window.addEventListener('scroll', onMobileExit, { passive: true });
   }
 
   // ── Blog contact-form → right-rail + mid-article CTA banners ────────────

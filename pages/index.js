@@ -3,13 +3,21 @@ import Link from 'next/link'
 
 const REPORTS = [
   {
+    slug: 'cro-daily-2026-06-15',
+    title: 'Daily CRO Report — Jun 15',
+    description: '84.5/100 overall (+3.5). Mobile exit-intent via scroll-up spike closes 50%-of-traffic gap. Social proof ("500+ crews") added across all 4 popups. "Free" added to footer CTA.',
+    tag: 'cro',
+    tagLabel: 'CRO',
+    date: '2026-06-15',
+    latest: true,
+  },
+  {
     slug: 'cro-daily-2026-06-14',
     title: 'Daily CRO Report — Jun 14',
     description: '81.0/100 overall (+2.8). Exit-intent popup implemented (role-qualifier), scroll-depth popup at 40%, page exclusion list, 24h cookie guards. Full popup cascade live.',
     tag: 'cro',
     tagLabel: 'CRO',
     date: '2026-06-14',
-    latest: true,
   },
   {
     slug: 'daily-cro-2026-06-11',
@@ -71,18 +79,18 @@ export default function Home() {
         {/* Live score card */}
         <div className="score-hero">
           <div>
-            <div className="score-label">Overall Score (Jun 14)</div>
-            <div className="score-big">81.0 <span className="grade">B+</span></div>
+            <div className="score-label">Overall Score (Jun 15)</div>
+            <div className="score-big">84.5 <span className="grade">B+</span></div>
           </div>
           <div className="score-detail">
             <div className="score-label">Suite breakdown</div>
             <div className="suite-scores">
               <div className="suite-score">
-                <span className="val" style={{ color: 'var(--accent2)' }}>84.2</span>
+                <span className="val" style={{ color: 'var(--accent2)' }}>86.5</span>
                 <span className="name">CRO</span>
               </div>
               <div className="suite-score">
-                <span className="val" style={{ color: 'var(--accent2)' }}>76.4</span>
+                <span className="val" style={{ color: 'var(--accent2)' }}>81.5</span>
                 <span className="name">Lead Capture</span>
               </div>
             </div>
@@ -90,7 +98,7 @@ export default function Home() {
           <div className="score-detail" style={{ marginLeft: 'auto' }}>
             <div className="score-label">Top fix</div>
             <div style={{ fontSize: '0.9rem', maxWidth: 260, color: 'var(--text)' }}>
-              Deploy banner.js to Vercel — 4 popup improvements staged but not live
+              Deploy banner.js to Vercel — mobile exit-intent + social proof staged but not live
             </div>
           </div>
         </div>
@@ -131,21 +139,21 @@ export default function Home() {
           <tbody>
             <tr>
               <td>1</td>
-              <td><strong>Deploy banner.js to Vercel/CDN</strong> — 4 new popups + blog banners staged, not live</td>
+              <td><strong>Deploy banner.js to Vercel/CDN</strong> — mobile exit-intent + social proof + blog banners staged, not live</td>
               <td>+4.0</td>
               <td>git push (5 min)</td>
             </tr>
             <tr>
               <td>2</td>
-              <td><strong>Add mobile exit-intent</strong> — scroll-up spike trigger (desktop-only now)</td>
-              <td>+2.5</td>
-              <td>~30 min dev</td>
-            </tr>
-            <tr>
-              <td>3</td>
               <td><strong>Reduce demo form</strong> — 13 fields → 3 required + new heading</td>
               <td>+3.5</td>
               <td>2h (app access needed)</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><strong>Mobile popup visual QA</strong> — verify scroll-lock on iOS Safari doesn&apos;t create scroll-trap</td>
+              <td>+1.0</td>
+              <td>30 min (browser emulator)</td>
             </tr>
             <tr>
               <td>4</td>
