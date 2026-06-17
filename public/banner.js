@@ -32,6 +32,10 @@
     return DEMO_URL + UTM_BASE + '&utm_content=' + content;
   }
 
+  function pushDemoBooked() {
+    if (window.dataLayer) window.dataLayer.push({ event: 'demo_booked' });
+  }
+
   // 24-hour first-party cookie guard.
   // Replaces sessionStorage so repeat visitors don't see the popup on every new
   // tab/window within the same day (sessionStorage resets per browsing context).
@@ -379,6 +383,12 @@
     if (!getCookie('sch_footer_dismissed')) {
       setTimeout(showFooter, 1500);
     }
+
+    // Fire demo_booked GA4 event on any banner CTA click
+    document.addEventListener('click', function (e) {
+      var el = e.target.closest('.sch-cta-btn, .sch-f-btn, .sch-role-btn, .schr-btn, .schb-btn');
+      if (el) pushDemoBooked();
+    });
 
     // Welcome modal: 4s delay, suppressed for 24h after first view
     if (!getCookie('sch_popup_seen')) {
