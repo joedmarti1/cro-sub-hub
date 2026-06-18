@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import '../styles/globals.css'
 
-const DEMO_URL = 'https://www.subcontractorhub.com/support'
+const DEMO_URL = 'https://app.subcontractorhub.com/sch-book-a-demo'
 const DEMO_UTM = `${DEMO_URL}?utm_source=site&utm_medium=popup&utm_campaign=lead-capture`
 
 // ── Popup modal ──────────────────────────────────────────────────────────────
