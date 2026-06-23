@@ -125,11 +125,11 @@
     overlay.innerHTML = [
       '<div id="sch-modal">',
       '  <button class="sch-close" aria-label="Close">&#215;</button>',
-      '  <div class="sch-pill">Trusted by 500+ Crews</div>',
-      '  <h2>More Jobs. Less Chaos.</h2>',
-      '  <p>The all-in-one platform for roofing, solar, and HVAC businesses — AI quoting, project management, and faster payments from one login.</p>',
-      '  <a href="' + demoLink('primary-modal-popup') + '" class="sch-cta-btn" target="_blank" rel="noopener">Book a Demo &#8594;</a>',
-      '  <p class="sch-micro">Free 30-min demo &middot; No commitment &middot; Setup in a day.</p>',
+      '  <div class="sch-pill">500+ Roofing, Solar &amp; HVAC Teams</div>',
+      '  <h2>Stop Losing Bids to Faster Competitors.</h2>',
+      '  <p>Top crews use SubcontractorHub to send AI-powered quotes in minutes, track every job, and collect payments faster — all from one login.</p>',
+      '  <a href="' + demoLink('primary-modal-popup') + '" class="sch-cta-btn" target="_blank" rel="noopener">See It in 30 Minutes &#8594;</a>',
+      '  <p class="sch-micro">Free demo &middot; No commitment &middot; Takes 2 min to book.</p>',
       '  <button class="sch-no-thanks">No thanks</button>',
       '</div>',
     ].join('');
@@ -384,9 +384,9 @@
       setTimeout(showFooter, 1500);
     }
 
-    // Fire demo_booked GA4 event on any banner CTA click
+    // Fire demo_booked GA4 event on any banner CTA click or any link to the demo form
     document.addEventListener('click', function (e) {
-      var el = e.target.closest('.sch-cta-btn, .sch-f-btn, .sch-role-btn, .schr-btn, .schb-btn');
+      var el = e.target.closest('.sch-cta-btn, .sch-f-btn, .sch-role-btn, .schr-btn, .schb-btn, a[href*="sch-book-a-demo"]');
       if (el) pushDemoBooked();
     });
 
